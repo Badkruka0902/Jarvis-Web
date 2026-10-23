@@ -29,6 +29,7 @@
 | 暗角 | 四角极淡灰色径向渐变 `.vignette` | 10 | fixed inset-0, pointer-events-none |
 | 顶栏 | 品牌标识 + 导航（占位） | 20 | fixed top |
 | 登录卡 | 玻璃拟态卡片（含表单） | 30 | fixed 全屏 grid 居中 |
+| 粒子层 | 60 颗飞向用户的粒子（`components/dust.tsx`） | 40 | fixed inset-0, perspective 700px, pointer-events-none |
 | 底部装饰 | `AGENTS · IN · ORBIT` 字距标语 | 10 | fixed bottom |
 | 角标 | 版本角标（demo 专用，正式版删除） | 20 | fixed bottom-right |
 
@@ -109,7 +110,11 @@
 | 鼠标视差 | 归一化指针位置 → 目标值，插值系数 0.045/帧 | `lib/use-parallax.ts` rAF 直写 style |
 | ↳ 空间旋转 | rotateX(-y·7°) rotateY(x·9°) | scene 容器 |
 | ↳ 卡片平移 | translate(-x·10px, -y·8px) | 卡片 wrapper |
+| ↳ 粒子层平移 | translate(x·26px, y·18px)（与卡片反向，强化景深） | 粒子容器 |
+| 粒子飞行 | 60 颗，translateZ -1500px → +320px（越近越大），径向渐变灰点，透明度 0→1→0，周期 7–15s 线性循环，负延迟铺满首屏 | `.dust-fly` keyframes + CSS 变量（--x/--y/--s/--o/--d/--dl） |
 | 白色光晕 | 见 §2.3 | `.ring-char` |
+
+**粒子层规格**（`components/dust.tsx`）：参数由**固定种子（mulberry32）的确定性伪随机**生成——位置 ±46vw/±42vh、直径 2.5–6px、强度 0.14–0.44、周期 7–15s、延迟 0–-15s。确定性保证 SSR 输出与客户端一致（无水合警告），60 颗全部在服务端 HTML 中。粒子颜色 `rgb(23 28 38 / o)` 径向渐变（近墨色软点），层级在登录卡**之上**（z-40），制造"从画面里飞出、掠过卡片"的纵深感。
 
 **reduced-motion**：`prefers-reduced-motion: reduce` 时停掉全部入场/自转动画（globals.css media 块 + `[data-ring] { animation: none !important }`），视差 hook 内部检测后直接不启动。环的静态布局仍然完整。
 
@@ -131,6 +136,7 @@ app/
 components/
   text-space.tsx    Client · 3D 文字环空间（渲染全部环 + scene 视差）
   login-card.tsx    Client · 玻璃拟态登录卡（表单状态 + 自身视差；占位提交逻辑）
+  dust.tsx          Client · 飞向用户的粒子层（60 颗，确定性随机，SSR 友好）
 lib/
   rings.ts          环配置数据 + ringCharAngles() 字符角度计算（纯数据无副作用，Server/Client 共用）
   use-parallax.ts   Client · 指针视差 hook（rAF + 直写 transform，不触发 re-render）
@@ -153,7 +159,7 @@ lib/
 
 ### 3.4 性能注记
 
-- 约 1350 个绝对定位 span（实测），但**动画作用在每条环的父容器上**（每环一个合成层，共 12 层），字符自身 transform 静态 —— GPU 负担可控；
+- 约 1350 个绝对定位 span（实测）+ 60 个粒子元素，但**动画均作用在父容器/粒子自身**（每环一个合成层，共 12 层 + 粒子 60 个小合成层），字符 transform 静态 —— GPU 负担可控；
 - 视差循环直写 `style.transform`，全程零 setState、零 React re-render；
 - 环容器与 scene 带 `will-change-transform` 提示提升；
 - 实测（Chrome 1440×900）：`next build` 首屏 First Load JS 106 kB，页面本体 3.19 kB，预览流畅；若目标环境性能受限，优先减少环数量（删 faint 环）而非降低字号。
@@ -172,8 +178,9 @@ lib/
 > 前提：已有项目为 Next.js App Router + React 19 + TS + Tailwind v4。
 
 1. **复制文件**（建议收拢到 `components/text-space/`）：
-   - `lib/rings.ts`、`lib/use-parallax.ts`、`components/text-space.tsx`、`components/login-card.tsx`
-   - 若只想要背景效果：仅前三个文件，把 `<TextSpace/>` 挂到已有登录页最底层即可；
+   - `lib/rings.ts`、`lib/use-parallax.ts`、`components/text-space.tsx`、`components/login-card.tsx`、`components/dust.tsx`
+   - 以及 `globals.css` 中的 `dust-fly` keyframes 与 `.dust-layer i` 类
+   - 若只想要背景效果：仅前三个文件 + dust，把 `<TextSpace/>`、`<Dust/>` 挂到已有登录页即可；
 2. **合并 globals.css**：迁移 `@theme` token（**重命名命名空间**避免与已有变量冲突，如 `--color-ts-ink`；或直接对接项目已有灰阶变量）、三个 `@keyframes`、`@layer components` 五个类、`prefers-reduced-motion` 块；
 3. **路由**：将 `app/page.tsx` 内容移到 `app/(auth)/login/page.tsx`；调整内部链接（"申请加入"等）为项目真实路由；
 4. **接入登录 API**：`login-card.tsx` `onSubmit` 中的 `TODO`（替换 setTimeout 演示逻辑；成功后 `router.push` 到工作台）；oauth 三按钮接真实 provider；

@@ -24,6 +24,12 @@
   from { opacity: 0; transform: translateY(26px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
+@keyframes dust-fly {
+  0% { transform: translate3d(var(--x), var(--y), -1500px); opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate3d(var(--x), var(--y), 320px); opacity: 0; }
+}
 
 @layer components {
   .bg-stage {
@@ -48,6 +54,19 @@
     -webkit-backface-visibility: hidden;
     text-shadow: 0 0 6px rgb(255 255 255 / 0.9), 0 0 14px rgb(255 255 255 / 0.55);
   }
+  .dust-layer i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(23 28 38 / var(--o)) 0%, transparent 72%);
+    opacity: 0;
+    animation: dust-fly var(--d) linear infinite;
+    animation-delay: var(--dl);
+    will-change: transform, opacity;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -57,5 +76,9 @@
   }
   [data-ring] {
     animation: none !important;
+  }
+  .dust-layer i {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }

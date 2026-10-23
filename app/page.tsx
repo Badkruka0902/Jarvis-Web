@@ -1,9 +1,10 @@
 import { LoginCard } from "@/components/login-card";
 import { TextSpace } from "@/components/text-space";
+import { Dust } from "@/components/dust";
 
 /**
  * 登录页（Server Component）：组合 3D 文字环背景与登录卡。
- * 层级：bg(0) < vignette(10) < header(20) < card(30)。
+ * 层级：bg(0) < vignette(10) < header(20) < card(30) < 粒子(40)。
  */
 export default function LoginPage() {
   return (
@@ -43,6 +44,8 @@ export default function LoginPage() {
       <div className="fixed bottom-5 right-6 z-20 rounded-full border border-ink/15 bg-white/60 px-2.5 py-1 text-[10px] tracking-[0.18em] text-ink/45">
         DEMO · NEXT.JS 参考实现
       </div>
+
+      <Dust />
     </div>
   );
 }
