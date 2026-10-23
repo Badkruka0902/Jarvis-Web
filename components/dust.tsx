@@ -29,10 +29,10 @@ const PARTICLES: Particle[] = (() => {
   return Array.from({ length: 60 }, () => ({
     x: (rand() * 92 - 46).toFixed(1) + "vw",
     y: (rand() * 84 - 42).toFixed(1) + "vh",
-    s: (2.5 + rand() * 3.5).toFixed(1) + "px",
-    o: (0.14 + rand() * 0.3).toFixed(2),
-    d: (7 + rand() * 8).toFixed(1) + "s",
-    dl: (-rand() * 15).toFixed(1) + "s",
+    s: (2.5 + rand() * 4.5).toFixed(1) + "px",
+    o: (0.16 + rand() * 0.32).toFixed(2),
+    d: (4.5 + rand() * 4.5).toFixed(1) + "s",
+    dl: (-rand() * 9).toFixed(1) + "s",
   }));
 })();
 
